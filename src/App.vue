@@ -1,17 +1,69 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+      <h1>The Table</h1>
+          <div>
+            <span>Headers</span>
+            <input type="text" id="headers">
+          </div>
+          <div>
+            <span>Rows</span>
+            <input type="text" id="rows">
+          </div>
+          <div>
+            <span>Styles</span>
+            <input type="text" id="meta">
+          </div>
+          <div>
+            <button 
+              @click="createTable()"
+              type="button"
+            >Create Table</button>
+        </div>
+        <div>
+          <div>
+            <span>CSS</span>
+            <textarea
+              id="css"
+            ></textarea>
+          </div>
+        </div>
+    <div id="table-div">
+      <Table
+        v-for="(table, i) in tables"
+        :key="i" 
+        :fields="table.fields"
+        :rows="table.rows"
+        :meta="table.meta"
+      />
+    </div>
   </div>
+
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Table from './components/Table.vue'
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    Table
+  },
+  data() {
+    return {
+      fields: ['Eeny', 'Meeny', 'Miny', 'Moe'],
+      rows: 6,
+      meta: ['red', 'green', 'blue'],
+      tables: []
+    }
+  },
+  methods: {
+    createTable() {
+      this.tables.push({
+        fields: this.fields,
+        rows: this.rows,
+        meta: this.meta
+      })
+    }
   }
 }
 </script>
@@ -24,5 +76,8 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+body {
+  background-color: #222;
 }
 </style>
