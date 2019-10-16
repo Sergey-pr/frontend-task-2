@@ -3,7 +3,7 @@
     <table>
       <thead>
         <tr>
-          <th v-for="field in fields" :key="field">
+          <th v-for="(field, k) in fields" :key="k">
             {{ field }}
           </th>
         </tr>
@@ -11,15 +11,16 @@
       <tbody>
         <tr v-for="i in rows" :key="i">
           <td v-for="(cell, j) in fields"
-            :key="cell"
+            :key="j"
             @dblclick="editCell(i,j)"
             @focusout="saveCell(i,j)"
-            @keyup.enter="blurCell(i,j)"
+            @keyup.enter="saveCell(i,j)"
             @keyup.esc="cancelCell(i,j)"
             :ref="'cell' + i + j"
             :style="`width: ${100 / fields.length}%;height: 22px;`"
           >
             <span :ref="'cellText' + i + j" ></span>
+            <input :ref="'input' + i + j" type="text" style="display:none;">
           </td>
         </tr>
       </tbody>
@@ -34,7 +35,7 @@
     >Add row after</button>
     <div class="input-group-prepend">
       <span >Row</span>
-      <input type="text" id="after-row">
+      <input id="after-row">
     </div>
     <button
       onclick="tbl.add_row()"
@@ -80,42 +81,37 @@ export default {
   },
   data() {
     return {
-      json: null
+      json: null,
+      textCellVar: null
     }
   },
   methods: {
     editCell(i,j) {
-      let cell = this.$refs['cell' + i + j]
-      let cellText = this.$refs['cellText' + i + j]
-      let inputBox = document.createElement('input')
+      let cell = this.$refs['cell' + i + j][0]
+      let cellText = this.$refs['cellText' + i + j][0]
+      let inputBox = this.$refs['input' + i + j][0]
       inputBox.style.width = '100%'
-      inputBox.ref = 'inputBox' + i + j
-      inputBox.setAttribute('type', 'text')
-      inputBox.setAttribute('value', cellText.innerText);
+      this.textCellVar = cellText.innerText
+      inputBox.value = cellText.innerText
+      inputBox.style.display = "inline"
       cellText.style.display = "none"
-      cell.appendChild(inputBox)
       inputBox.focus()
       inputBox.select()
     },
     saveCell(i,j) {
-      let cell = this.$refs['cell' + i + j]
-      let cellText = this.$refs['cellText' + i + j]
-      let inputBox = this.$refs['inputBox' + i + j]
+      let cell = this.$refs['cell' + i + j][0]
+      let cellText = this.$refs['cellText' + i + j][0]
+      let inputBox = this.$refs['input' + i + j][0]
       cellText.innerText = inputBox.value
       cellText.style.display = "inline"
-      inputBox.remove()
-    },
-    blurCell(i,j) {
-      let inputBox = document.getElementById('inputBox' + i + j)
-      inputBox.blur()
+      inputBox.style.display = "none"
     },
     cancelCell(i,j) {
-      let cellText = document.getElementById('cellText' + i + j)
-      let inputBox = document.getElementById('inputBox' + i + j)
+      let cell = this.$refs['cell' + i + j][0]
+      let cellText = this.$refs['cellText' + i + j][0]
+      let inputBox = this.$refs['input' + i + j][0]
+      inputBox.style.display = "none"
       cellText.style.display = "inline"
-      let temp = cellText.innerText
-      inputBox.blur()
-      cellText.innerText = temp
     }
   }
 }

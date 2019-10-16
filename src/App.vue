@@ -3,15 +3,15 @@
       <h1>The Table</h1>
           <div>
             <span>Headers</span>
-            <input type="text" id="headers">
+            <input v-model="fields" type="text" id="headers">
           </div>
           <div>
             <span>Rows</span>
-            <input type="text" id="rows">
+            <input v-model="rows" type="text" id="rows">
           </div>
           <div>
             <span>Styles</span>
-            <input type="text" id="meta">
+            <input v-model="meta" type="text" id="meta">
           </div>
           <div>
             <button 
@@ -50,18 +50,18 @@ export default {
   },
   data() {
     return {
-      fields: ['Eeny', 'Meeny', 'Miny', 'Moe'],
+      fields: 'Eeny, Meeny, Miny, Moe',
       rows: 6,
-      meta: ['red', 'green', 'blue'],
+      meta: 'red, green, blue',
       tables: []
     }
   },
   methods: {
     createTable() {
       this.tables.push({
-        fields: this.fields,
-        rows: this.rows,
-        meta: this.meta
+        fields: this.fields.split(','),
+        rows: +this.rows,
+        meta: this.meta.split(',')
       })
     }
   }
