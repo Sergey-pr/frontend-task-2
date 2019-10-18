@@ -35,6 +35,7 @@
           </div>
         </div>
     <div id="table-div">
+      <div class="loader" v-if="loader"></div>
       <Table
         v-for="value in $Tables"
         :key="value.id" 
@@ -66,7 +67,8 @@ export default {
 .green {\n\t  color: lightgreen;\n}
 .blue {\n\t  color: lightblue;\n}`,
       style: null,
-      api: null
+      api: null,
+      loader: false
     }
   },
   computed: {
@@ -93,6 +95,7 @@ export default {
           id: this.id
         } 
       } else {
+        this.loader = true
         this.$store.dispatch('GET_DATA', this.api)
           .then(() => {
             this.$Tables[this.id] = {
@@ -100,6 +103,7 @@ export default {
               meta: this.meta.split(','),
               id: this.id
             }
+            this.loader = false
             this.reRender()
           })
       }
@@ -129,5 +133,18 @@ export default {
 }
 body {
   background-color: #222;
+}
+.loader {
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

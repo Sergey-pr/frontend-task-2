@@ -29,7 +29,6 @@
       <tbody>
         <template v-for="(dict, i) in paginatedData">
           <tr 
-            v-if="!searchField || getWholeRow(paginatedData[i]).toLowerCase().includes(searchField)"
             :key="i"
             :class="meta[i % 2 + 1]"
           >
@@ -43,12 +42,13 @@
                 :style="`width: ${100 / Object.keys(paginatedData[i]).length}%;height: 22px;`"
               >
                 <span>{{ value }}</span>
-                <input
+                <textarea
                   @blur="saveCell(i, key, value)"
                   :ref="'input' + i + key"
                   type="text"
                   style="display:none;"
                 >
+                </textarea>
               </td>
               <td
                 v-else
@@ -60,12 +60,13 @@
                 :style="`width: ${100 / Object.keys(value).length}%;height: 22px;`"
               >
                 <span>{{ value1 }}</span>
-                <input
+                <textarea
                   @blur="saveInnerCell(i, key1, key)"
                   :ref="'input' + i + key1"
                   type="text"
                   style="display:none;"
                 >
+                </textarea>
               </td>
             </template>
           </tr>
@@ -127,7 +128,6 @@ export default {
       json: null,
       escPressed: false,
       trueId: this.id,
-      trueData: this.data,
       cellVar: null,
       row_after_index: null,
       showModal: false,
@@ -135,24 +135,25 @@ export default {
       size: 10,
       sort: 'pos',
       sortKey: null,
-      searchField: null
+      searchField: null,
+      filteredData: this.data
     }
   },
   computed: {
     pageCount() {
-      let l = this.trueData.length
+      let l = this.filteredData.length
       let s = this.size
       return Math.ceil(l / s)
     },
     paginatedData() {
       const start = this.pageNumber * this.size
       const end = start + this.size
-      return this.trueData.slice(start, end)
+      return this.filteredData.slice(start, end)
     }
   },
   watch: {
     searchField: function (newSearchField, oldSearchField) {
-
+      this.getFilteredData()
     }
   },
   methods: {
@@ -207,39 +208,39 @@ export default {
       this.paginatedData[i][upperKey][key] = this.cellVar
     },
     clean_table() {
-      for (let i = 0; i < this.trueData.length; i++) {
-        for (let j = 0; j < Object.keys(this.trueData[i]).length; j++) {
-          this.trueData[i][Object.keys(this.trueData[0])[j]] = ''
+      for (let i = 0; i < this.data.length; i++) {
+        for (let j = 0; j < Object.keys(this.data[i]).length; j++) {
+          this.data[i][Object.keys(this.data[0])[j]] = ''
         }
       }
     },
     add_row() {
       let dict = {}
-      for (let i = 0; i < Object.keys(this.trueData[i]).length; i++) {
-        if (typeof this.trueData[0][Object.keys(this.trueData[0])[i]] === 'object') {
-          dict[Object.keys(this.trueData[0])[i]] = {}
-          for (let j = 0; j < Object.keys(this.trueData[0][Object.keys(this.trueData[0])[i]]).length; j++) {
-            dict[Object.keys(this.trueData[0])[i]][Object.keys(this.trueData[0][Object.keys(this.trueData[0])[i]])[j]] = ''
+      for (let i = 0; i < Object.keys(this.data[i]).length; i++) {
+        if (typeof this.data[0][Object.keys(this.data[0])[i]] === 'object') {
+          dict[Object.keys(this.data[0])[i]] = {}
+          for (let j = 0; j < Object.keys(this.data[0][Object.keys(this.data[0])[i]]).length; j++) {
+            dict[Object.keys(this.data[0])[i]][Object.keys(this.data[0][Object.keys(this.data[0])[i]])[j]] = ''
           }
         } else {
-          dict[Object.keys(this.trueData[0])[i]] = ''
+          dict[Object.keys(this.data[0])[i]] = ''
         }
       }
-      this.trueData.push(dict)
+      this.data.push(dict)
     },
     insert_after_row(row_after_index) {
       let dict = {}
-      for (let i = 0; i < Object.keys(this.trueData[i]).length; i++) {
-        if (typeof this.trueData[0][Object.keys(this.trueData[0])[i]] === 'object') {
-          dict[Object.keys(this.trueData[0])[i]] = {}
-          for (let j = 0; j < Object.keys(this.trueData[0][Object.keys(this.trueData[0])[i]]).length; j++) {
-            dict[Object.keys(this.trueData[0])[i]][Object.keys(this.trueData[0][Object.keys(this.trueData[0])[i]])[j]] = ''
+      for (let i = 0; i < Object.keys(this.data[i]).length; i++) {
+        if (typeof this.data[0][Object.keys(this.data[0])[i]] === 'object') {
+          dict[Object.keys(this.data[0])[i]] = {}
+          for (let j = 0; j < Object.keys(this.data[0][Object.keys(this.data[0])[i]]).length; j++) {
+            dict[Object.keys(this.data[0])[i]][Object.keys(this.data[0][Object.keys(this.data[0])[i]])[j]] = ''
           }
         } else {
-          dict[Object.keys(this.trueData[0])[i]] = ''
+          dict[Object.keys(this.data[0])[i]] = ''
         }
       }
-      this.trueData.splice(row_after_index, 0, dict)
+      this.data.splice(row_after_index, 0, dict)
     },
     removeTable() {
       delete this.$Tables[this.trueId]
@@ -257,7 +258,7 @@ export default {
     },
     sortData(key) {
       if (this.sort === 'pos') {
-        this.trueData = this.trueData.sort((a, b) => {
+        this.data = this.data.sort((a, b) => {
           if (!isNaN(+a[key]))  {
             return a[key] - b[key]
           } else {
@@ -274,7 +275,7 @@ export default {
         })
         this.sort = 'neg'
       } else {
-        this.trueData = this.trueData.sort((a, b) => {
+        this.data = this.data.sort((a, b) => {
           if (!isNaN(+a[key])) {
             return b[key] - a[key]
           } else {
@@ -297,7 +298,7 @@ export default {
     },
     sortInnerData(key, key1) {
       if (this.sort === 'pos') {
-        this.trueData = this.trueData.sort((a, b) => {
+        this.data = this.data.sort((a, b) => {
           if (!isNaN(+a[key][key1]))  {
             return a[key][key1] - b[key][key1]
           } else {
@@ -314,7 +315,7 @@ export default {
         })
         this.sort = 'neg'
       } else {
-        this.trueData = this.trueData.sort((a, b) => {
+        this.data = this.data.sort((a, b) => {
           if (!isNaN(+a[key][key1])) {
             return b[key][key1] - a[key][key1]
           } else {
@@ -348,7 +349,20 @@ export default {
         }
       }
       return rowArr.join('')
-    }
+    },
+    getFilteredData() {
+      let varData = []
+      if (this.searchField) {
+        for (let i = 0; i < this.data.length; i++) {
+          if (this.getWholeRow(this.data[i]).toLowerCase().includes(this.searchField.trim())) {
+            varData.push(this.data[i])
+          }
+        }
+      } else {
+        varData = this.data
+      }
+      this.filteredData = varData
+    },
   }
 }
 </script>
