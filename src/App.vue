@@ -35,16 +35,25 @@
         </div>
       </div>
       <div class=table-options-secondary>
-        <span>Data from api:</span>
+        <span>Public API Endpoint:</span>
         <div class="table-options-unit">
           <textarea
             v-model="api"
           ></textarea>
         </div>
       </div>
+      <div class=table-options-secondary>
+        <span>Data from json:</span>
+        <div class="table-options-unit">
+          <textarea
+            v-model="json"
+          ></textarea>
+        </div>
+      </div>
     </div>
     <div id="table-div">
       <div class="loader" v-if="loader"></div>
+      <div class="error" v-if="error">{{ error }}</div>
       <Table
         v-for="value in $Tables"
         :key="value.id"
@@ -76,8 +85,10 @@ export default {
 .green {\n\t  color: lightgreen;\n}
 .blue {\n\t  color: lightblue;\n}`,
       style: null,
-      api: 'http://www.filltext.com/?rows=1000&id={number|1000}&firstName={firstName}&lastName={lastName}&email={email}&phone={phone|(xxx)xxx-xx-xx}&adress={addressObject}&description={lorem|32}',
-      loader: false
+      api: 'https://jsonplaceholder.typicode.com/comments',
+      loader: false,
+      error: null,
+      json: null
     }
   },
   computed: {
@@ -86,9 +97,33 @@ export default {
     ])
   },
   methods: {
-    createTable() {
+    async createTable() {
+      this.error = null
       this.style.innerHTML = this.css
-      if (!this.api) {
+      if (this.api) {
+        this.loader = true
+        try {
+          await this.$store.dispatch('GET_DATA', this.api)
+            .then(() => {
+              this.$Tables[this.id] = {
+                data: this.DATA,
+                meta: this.meta.split(','),
+                id: this.id
+              }
+              this.loader = false
+              this.reRender()
+            })
+        } catch (e) {
+          this.loader = false
+          this.error = 'API Error'
+        }
+      } else if (this.json) {
+        this.$Tables[this.id] = {
+          data: JSON.parse(this.json),
+          meta: this.meta.split(','),
+          id: this.id
+        }
+      } else {
         let data = []
         for (let i = 0; i < +this.rows; i++) {
           let dict = {}
@@ -102,18 +137,6 @@ export default {
           meta: this.meta.split(','),
           id: this.id
         }
-      } else {
-        this.loader = true
-        this.$store.dispatch('GET_DATA', this.api)
-          .then(() => {
-            this.$Tables[this.id] = {
-              data: this.DATA,
-              meta: this.meta.split(','),
-              id: this.id
-            }
-            this.loader = false
-            this.reRender()
-          })
       }
       this.id++
       this.reRender()
@@ -176,5 +199,9 @@ input {
 }
 .table-div {
   clear: left;
+}
+.error {
+  font-size: 30pt;
+  color: red;
 }
 </style>

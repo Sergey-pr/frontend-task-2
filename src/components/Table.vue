@@ -20,7 +20,7 @@
             v-else
             v-for="(value1, key1) in value"
             :class="meta[0]"
-            :key="key1"
+            :key="key + '.' + key1"
             @click="sortData(key1, key)"
           >
             <span>{{ key + '.' + key1 }}</span>
