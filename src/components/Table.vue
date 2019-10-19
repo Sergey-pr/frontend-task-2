@@ -1,6 +1,6 @@
 <template>
   <div class="table-div">
-    <input class="input-search" v-model="searchField">
+    <input class="input-search" v-model="searchField" placeholder="Search">
     <table>
       <thead>
         <tr>
