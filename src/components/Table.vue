@@ -1,6 +1,6 @@
 <template>
   <div class="table-div">
-    <input v-model="searchField">
+    <input class="input-search" v-model="searchField">
     <table>
       <thead>
         <tr>
@@ -12,34 +12,37 @@
            :key="key"
            @click="sortData(key)"
           >
-            {{ key }}
+            <span>{{ key }}</span>
+            <span v-if="sort === 'pos' && sortKey === key">&#x25BC;</span>
+            <span v-if="sort === 'neg' && sortKey === key">&#x25B2;</span>
           </th>
           <th
             v-else
             v-for="(value1, key1) in value"
             :class="meta[0]"
             :key="key1"
-            @click="sortInnerData(key, key1)"
+            @click="sortData(key1, key)"
           >
-            {{ key + '.' + key1 }}
+            <span>{{ key + '.' + key1 }}</span>
+            <span v-if="sort === 'pos' && sortKey === key1">&#x25BC;</span>
+            <span v-if="sort === 'neg' && sortKey === key1">&#x25B2;</span>
           </th>
           </template>
         </tr>
       </thead>
       <tbody>
         <template v-for="(dict, i) in paginatedData">
-          <tr 
+          <tr
             :key="i"
             :class="meta[i % 2 + 1]"
           >
             <template v-for="(value, key, index) in paginatedData[i]">
-              <td 
+              <td
                 v-if="typeof value !== 'object'"
                 :key="key+index"
                 @dblclick="editCell(i, key)"
                 @keyup.enter="saveCell(i, key)"
                 @keyup.esc="cancelCell(i, key)"
-                :style="`width: ${100 / Object.keys(paginatedData[i]).length}%;height: 22px;`"
               >
                 <span>{{ value }}</span>
                 <textarea
@@ -54,14 +57,13 @@
                 v-else
                 v-for="(value1, key1) in value"
                 :key="key1+index"
-                @dblclick="editInnerCell(i, key1, key)"
-                @keyup.enter="saveInnerCell(i, key1, key)"
-                @keyup.esc="cancelInnerCell(i, key1, key)"
-                :style="`width: ${100 / Object.keys(value).length}%;height: 22px;`"
+                @dblclick="editCell(i, key1, key)"
+                @keyup.enter="saveCell(i, key1, key)"
+                @keyup.esc="cancelCell(i, key1, key)"
               >
                 <span>{{ value1 }}</span>
                 <textarea
-                  @blur="saveInnerCell(i, key1, key)"
+                  @blur="saveCell(i, key1, key)"
                   :ref="'input' + i + key1"
                   type="text"
                   style="display:none;"
@@ -73,40 +75,80 @@
         </template>
       </tbody>
     </table>
-    <button
-      @click="clean_table()"
-      type="button"
-    >Clear table</button>
-    <button
-      @click="insert_after_row(row_after_index)"
-      type="button"
-    >Add row after</button>
-    <span>Row:</span>
-    <input v-model="row_after_index">
-    <button
-      @click="add_row()"
-      type="button"
-    >Add row</button>
-    <button
-      type="button"
-      id="show-modal"
-      @click="get_json()"
-    >Get JSON</button>
-    <Modal :data="json" v-if="showModal" @close="showModal = false"></Modal>
-    <button
-      @click="removeTable()"
-      type="button"
-    >Remove table</button>
-    <button
-      v-if="pageNumber > 0"
-      @click="prevPage()"
-      type="button"
-    >&lt;&lt;</button>
-    <button
-      v-if="pageNumber < pageCount - 1"
-      @click="nextPage()"
-      type="button"
-    >&gt;&gt;</button>
+    <div class="table-options">
+      <button
+        class="table-options-unit"
+        @click="clean_table()"
+        type="button"
+      >
+        Clear table
+      </button>
+      <button
+        class="table-options-unit"
+        @click="add_row()"
+        type="button"
+      >
+        Add row
+      </button>
+      <span class="table-options-unit">Row:</span>
+      <input class="table-options-input" v-model="row_after_index">
+      <button
+        class="table-options-unit"
+        @click="insert_after_row(row_after_index)"
+        type="button"
+      >
+        Add row after
+      </button>
+      <button
+        class="table-options-unit"
+        type="button"
+        id="show-modal"
+        @click="get_json()"
+      >
+        Get JSON
+      </button>
+      <Modal :data="json" v-if="showModal" @close="showModal = false"></Modal>
+      <button
+        class="table-options-unit"
+        @click="removeTable()"
+        type="button"
+      >
+        Remove table
+      </button>
+    </div>
+    <div class="pagination">
+      <a
+        v-if="pageNumber > 0"
+        @click="pageNumber--"
+      >&#171;</a>
+      <a
+        v-for="i in pageCount"
+        :key="i"
+        @click="pageNumber = i - 1"
+      >
+        <span
+          class="pagination-links"
+          id="pagination-current"
+          v-if="i === pageNumber + 1"
+        >{{ i }}</span>
+        <span
+          class="pagination-links"
+          v-if="(i === 1 && i !== pageNumber + 1) || (i === pageCount && i !== pageNumber + 1)"
+        >{{ i }}</span>
+        <span
+          class="pagination-links"
+          v-if="i > pageNumber - 5
+            && i < pageNumber + 5
+            && i !== pageNumber + 1
+            && i !== pageCount
+            && i !== 1"
+        >{{ i }}</span>
+      </a>
+      <a
+        v-if="pageNumber < pageCount - 1"
+        @click="pageNumber++"
+      >&#187;</a>
+    </div>
   </div>
 </template>
 
@@ -157,55 +199,43 @@ export default {
     }
   },
   methods: {
-    editCell(i, key) {
+    editCell(i, key, upperKey) {
       let inputBox = this.$refs['input' + i + key][0]
       inputBox.style.width = '100%'
-      this.cellVar = this.paginatedData[i][key]
-      inputBox.value = this.paginatedData[i][key]
-      this.paginatedData[i][key] = ''
-      inputBox.style.display = "inline"
+      if (upperKey) {
+        this.cellVar = this.paginatedData[i][upperKey][key]
+        inputBox.value = this.paginatedData[i][upperKey][key]
+        this.paginatedData[i][upperKey][key] = ''
+      } else {
+        this.cellVar = this.paginatedData[i][key]
+        inputBox.value = this.paginatedData[i][key]
+        this.paginatedData[i][key] = ''
+      }
+      inputBox.style.display = 'inline'
       inputBox.focus()
-      inputBox.select()
     },
-    saveCell(i, key) {
+    saveCell(i, key, upperKey) {
       let inputBox = this.$refs['input' + i + key][0]
       if (this.escPressed === false) {
-        this.paginatedData[i][key] = inputBox.value
+        if (upperKey) {
+          this.paginatedData[i][upperKey][key] = inputBox.value
+        } else {
+          this.paginatedData[i][key] = inputBox.value
+        }
       } else {
         this.escPressed = false
       }
-      inputBox.style.display = "none"
+      inputBox.style.display = 'none'
     },
-    cancelCell(i, key) {
+    cancelCell(i, key, upperKey) {
       let inputBox = this.$refs['input' + i + key][0]
       this.escPressed = true
-      inputBox.style.display = "none"
-      this.paginatedData[i][key] = this.cellVar
-    },
-    editInnerCell(i, key, upperKey) {
-      let inputBox = this.$refs['input' + i + key][0]
-      inputBox.style.width = '100%'
-      this.cellVar = this.paginatedData[i][upperKey][key]
-      inputBox.value = this.paginatedData[i][upperKey][key]
-      this.paginatedData[i][upperKey][key] = ''
-      inputBox.style.display = "inline"
-      inputBox.focus()
-      inputBox.select()
-    },
-    saveInnerCell(i, key, upperKey) {
-      let inputBox = this.$refs['input' + i + key][0]
-      if (this.escPressed === false) {
-        this.paginatedData[i][upperKey][key] = inputBox.value
+      inputBox.style.display = 'none'
+      if (upperKey) {
+        this.paginatedData[i][upperKey][key] = this.cellVar
       } else {
-        this.escPressed = false
+        this.paginatedData[i][key] = this.cellVar
       }
-      inputBox.style.display = "none"
-    },
-    cancelInnerCell(i, key, upperKey) {
-      let inputBox = this.$refs['input' + i + key][0]
-      this.escPressed = true
-      inputBox.style.display = "none"
-      this.paginatedData[i][upperKey][key] = this.cellVar
     },
     clean_table() {
       for (let i = 0; i < this.data.length; i++) {
@@ -250,91 +280,46 @@ export default {
       this.showModal = true
       this.json = JSON.stringify(this.$Tables[this.trueId].data)
     },
-    nextPage() {
-      this.pageNumber++;
-    },
-    prevPage() {
-      this.pageNumber--;
-    },
-    sortData(key) {
-      if (this.sort === 'pos') {
-        this.data = this.data.sort((a, b) => {
-          if (!isNaN(+a[key]))  {
-            return a[key] - b[key]
+    sortData(key, upperKey) {
+      this.filteredData = this.filteredData.sort((a, b) => {
+        let aKey = a[key]
+        let bKey = b[key]
+        if (upperKey) {
+          aKey = a[upperKey][key]
+          bKey = b[upperKey][key]
+        }
+        if (!isNaN(+aKey)) {
+          if (this.sort === 'pos') {
+            return aKey - bKey
           } else {
-            var nameA = a[key].toUpperCase()
-            var nameB = b[key].toUpperCase()
-            if (nameA < nameB) {
+            return bKey - aKey
+          }
+        } else {
+          var nameA = aKey.toUpperCase()
+          var nameB = bKey.toUpperCase()
+          if (nameA < nameB) {
+            if (this.sort === 'pos') {
               return -1
-            }
-            if (nameA > nameB) {
+            } else {
               return 1
             }
-            return 0
           }
-        })
+          if (nameA > nameB) {
+            if (this.sort === 'pos') {
+              return 1
+            } else {
+              return -1
+            }
+          }
+          return 0
+        }
+      })
+      if (this.sort === 'pos') {
         this.sort = 'neg'
       } else {
-        this.data = this.data.sort((a, b) => {
-          if (!isNaN(+a[key])) {
-            return b[key] - a[key]
-          } else {
-            var nameA = a[key].toUpperCase()
-            var nameB = b[key].toUpperCase()
-            if (nameA < nameB) {
-              return 1
-            }
-            if (nameA > nameB) {
-              return -1
-            }
-            return 0
-          }
-        })
         this.sort = 'pos'
       }
-      if (this.sortKey !== key) {
-        this.sortKey = key
-      }
-    },
-    sortInnerData(key, key1) {
-      if (this.sort === 'pos') {
-        this.data = this.data.sort((a, b) => {
-          if (!isNaN(+a[key][key1]))  {
-            return a[key][key1] - b[key][key1]
-          } else {
-            var nameA = a[key][key1].toUpperCase()
-            var nameB = b[key][key1].toUpperCase()
-            if (nameA < nameB) {
-              return -1
-            }
-            if (nameA > nameB) {
-              return 1
-            }
-            return 0
-          }
-        })
-        this.sort = 'neg'
-      } else {
-        this.data = this.data.sort((a, b) => {
-          if (!isNaN(+a[key][key1])) {
-            return b[key][key1] - a[key][key1]
-          } else {
-            var nameA = a[key][key1].toUpperCase()
-            var nameB = b[key][key1].toUpperCase()
-            if (nameA < nameB) {
-              return 1
-            }
-            if (nameA > nameB) {
-              return -1
-            }
-            return 0
-          }
-        })
-        this.sort = 'pos'
-      }
-      if (this.sortKey !== key) {
-        this.sortKey = key
-      }
+      this.sortKey = key
     },
     getWholeRow(row) {
       let rowArr = []
@@ -362,7 +347,7 @@ export default {
         varData = this.data
       }
       this.filteredData = varData
-    },
+    }
   }
 }
 </script>
@@ -379,5 +364,45 @@ table {
 th, td {
   padding: 15px;
   border: 2px solid #999;
+  min-width: 100px;
+}
+a {
+  cursor: pointer;
+  color: #999;
+}
+a:hover {
+  color: #fff;
+}
+.pagination {
+  border: grey solid 1px;
+  border-radius: 5px;
+  padding: 2px;
+  margin: 0px 5%;
+  float: right;
+}
+.pagination-links {
+  margin: 0px 3px;
+  font-size: 15pt;
+}
+#pagination-current {
+  font-weight: 600;
+  color: #fff;
+}
+.table-options {
+  float: left;
+  margin: 0px 5% 1% 5%;
+}
+.input-search {
+  float: left;
+  margin: 5px 5%;
+  border-radius: 5px;
+  width: 200px;
+}
+.table-options-unit {
+  margin-left: 5px;
+  border-radius: 5px;
+}
+.table-options-input {
+  width: 35px;
 }
 </style>

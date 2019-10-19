@@ -1,44 +1,53 @@
 <template>
   <div id="app">
-      <h1>The Table</h1>
-          <div>
-            <span>Headers:</span>
+      <h1>Table Settings:</h1>
+      <div class="table-options">
+        <div class="table-options-main">
+          <span>Methods:</span>
+          <div class="table-options-unit">
+            <span>Fields: </span>
             <input v-model="fields" type="text" id="headers">
           </div>
-          <div>
-            <span>Rows:</span>
+          <div class="table-options-unit">
+            <span>Rows: </span>
             <input v-model="rows" type="text" id="rows">
           </div>
-          <div>
-            <span>Styles:</span>
+          <div class="table-options-unit">
+            <span>Meta: </span>
             <input v-model="meta" type="text" id="meta">
           </div>
-          <div>
-            <button 
+          <div class="table-options-unit">
+            <button
               @click="createTable()"
               type="button"
-            >Create Table</button>
-        </div>
-        <div>
-          <div>
-            <span>CSS:</span>
-            <textarea
-              v-model="css"
-              id="css"
-            ></textarea>
-          </div>
-          <div>
-            <span>Data from api:</span>
-            <textarea
-              v-model="api"
-            ></textarea>
+            >
+              Create Table
+            </button>
           </div>
         </div>
+      <div class=table-options-secondary>
+        <span>CSS:</span>
+        <div class="table-options-unit">
+          <textarea
+            v-model="css"
+            id="css"
+          ></textarea>
+        </div>
+      </div>
+      <div class=table-options-secondary>
+        <span>Data from api:</span>
+        <div class="table-options-unit">
+          <textarea
+            v-model="api"
+          ></textarea>
+        </div>
+      </div>
+    </div>
     <div id="table-div">
       <div class="loader" v-if="loader"></div>
       <Table
         v-for="value in $Tables"
-        :key="value.id" 
+        :key="value.id"
         :data="value.data"
         :meta="value.meta"
         :id="value.id"
@@ -67,7 +76,7 @@ export default {
 .green {\n\t  color: lightgreen;\n}
 .blue {\n\t  color: lightblue;\n}`,
       style: null,
-      api: null,
+      api: 'http://www.filltext.com/?rows=1000&id={number|1000}&firstName={firstName}&lastName={lastName}&email={email}&phone={phone|(xxx)xxx-xx-xx}&adress={addressObject}&description={lorem|32}',
       loader: false
     }
   },
@@ -81,7 +90,6 @@ export default {
       this.style.innerHTML = this.css
       if (!this.api) {
         let data = []
-        let dict = {}
         for (let i = 0; i < +this.rows; i++) {
           let dict = {}
           for (let j = 0; j < this.fields.split(',').length; j++) {
@@ -93,7 +101,7 @@ export default {
           data: data,
           meta: this.meta.split(','),
           id: this.id
-        } 
+        }
       } else {
         this.loader = true
         this.$store.dispatch('GET_DATA', this.api)
@@ -135,16 +143,38 @@ body {
   background-color: #222;
 }
 .loader {
-  border: 16px solid #f3f3f3; /* Light grey */
-  border-top: 16px solid #3498db; /* Blue */
+  margin: 5% 45%;
+  border: 16px solid #444;
+  border-top: 16px solid #999;
   border-radius: 50%;
   width: 120px;
   height: 120px;
   animation: spin 2s linear infinite;
 }
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+.table-options {
+  text-align: center;
+  display: inline-block;
+}
+.table-options-main, .table-options-secondary {
+  float: left;
+}
+.table-options-unit {
+  margin: 2px;
+}
+textarea {
+  height: 85px;
+  width: 250px;
+  border-radius: 5px;
+  resize: none;
+}
+input {
+  border-radius: 5px;
+}
+.table-div {
+  clear: left;
 }
 </style>
