@@ -4,29 +4,31 @@
     <table>
       <thead>
         <tr>
+          <th class="table-col-selected"></th>
           <template
-             v-for="(value, key) in paginatedData[0]">
-          <th
-           :class="meta[0]"
-           v-if="typeof value !== 'object'"
-           :key="key"
-           @click="sortData(key)"
+             v-for="(value, key) in paginatedData[0]"
           >
-            <span>{{ key }}</span>
-            <span v-if="sort === 'pos' && sortKey === key">&#x25BC;</span>
-            <span v-if="sort === 'neg' && sortKey === key">&#x25B2;</span>
-          </th>
-          <th
-            v-else
-            v-for="(value1, key1) in value"
+            <th
             :class="meta[0]"
-            :key="key + '.' + key1"
-            @click="sortData(key1, key)"
-          >
-            <span>{{ key + '.' + key1 }}</span>
-            <span v-if="sort === 'pos' && sortKey === key1">&#x25BC;</span>
-            <span v-if="sort === 'neg' && sortKey === key1">&#x25B2;</span>
-          </th>
+            v-if="typeof value !== 'object'"
+            :key="key"
+            @click="sortData(key)"
+            >
+              <span>{{ key }}</span>
+              <span v-if="sort === 'pos' && sortKey === key">&#x25BC;</span>
+              <span v-if="sort === 'neg' && sortKey === key">&#x25B2;</span>
+            </th>
+            <th
+              v-else
+              v-for="(value1, key1) in value"
+              :class="meta[0]"
+              :key="key + '.' + key1"
+              @click="sortData(key1, key)"
+            >
+              <span>{{ key + '.' + key1 }}</span>
+              <span v-if="sort === 'pos' && sortKey === key1">&#x25BC;</span>
+              <span v-if="sort === 'neg' && sortKey === key1">&#x25B2;</span>
+            </th>
           </template>
         </tr>
       </thead>
@@ -36,6 +38,9 @@
             :key="i"
             :class="meta[i % 2 + 1]"
           >
+            <td class="table-col-selected">
+              <input type="checkbox" :value="i" v-model="selected">
+            </td>
             <template v-for="(value, key, index) in paginatedData[i]">
               <td
                 v-if="typeof value !== 'object'"
@@ -98,6 +103,13 @@
         type="button"
       >
         Add row after
+      </button>
+      <button
+        class="table-options-unit"
+        @click="removeRows()"
+        type="button"
+      >
+        Remove Rows
       </button>
       <button
         class="table-options-unit"
@@ -178,7 +190,8 @@ export default {
       sort: 'pos',
       sortKey: null,
       searchField: null,
-      filteredData: this.data
+      filteredData: this.data,
+      selected: []
     }
   },
   computed: {
@@ -271,6 +284,12 @@ export default {
         }
       }
       this.data.splice(row_after_index, 0, dict)
+    },
+    removeRows() {
+      for (let i = 0; i < this.selected.length; i++) {
+        this.data.splice(this.selected[i] - i, 1)
+      }
+      this.selected = []
     },
     removeTable() {
       delete this.$Tables[this.trueId]
@@ -404,5 +423,9 @@ a:hover {
 }
 .table-options-input {
   width: 35px;
+}
+.table-col-selected {
+  max-width: 20px;
+  min-width: 20px;
 }
 </style>

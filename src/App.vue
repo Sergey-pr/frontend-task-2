@@ -3,7 +3,8 @@
       <h1>Table Settings:</h1>
       <div class="table-options">
         <div class="table-options-main">
-          <span>Methods:</span>
+          <input type="radio" id="radio-methods" value="methods" v-model="input">
+          <label for="radio-methods">Methods:</label>
           <div class="table-options-unit">
             <span>Fields: </span>
             <input v-model="fields" type="text" id="headers">
@@ -35,7 +36,8 @@
         </div>
       </div>
       <div class=table-options-secondary>
-        <span>Public API Endpoint:</span>
+        <input type="radio" id="radio-api" value="api" v-model="input">
+        <label for="radio-api">Public API Endpoint:</label>
         <div class="table-options-unit">
           <textarea
             v-model="api"
@@ -43,7 +45,8 @@
         </div>
       </div>
       <div class=table-options-secondary>
-        <span>Data from json:</span>
+        <input type="radio" id="radio-json" value="json" v-model="input">
+        <label for="radio-json">Data from json:</label>
         <div class="table-options-unit">
           <textarea
             v-model="json"
@@ -88,7 +91,8 @@ export default {
       api: 'https://jsonplaceholder.typicode.com/comments',
       loader: false,
       error: null,
-      json: null
+      json: null,
+      input: 'methods'
     }
   },
   computed: {
@@ -100,7 +104,7 @@ export default {
     async createTable() {
       this.error = null
       this.style.innerHTML = this.css
-      if (this.api) {
+      if (this.input === 'api') {
         this.loader = true
         try {
           await this.$store.dispatch('GET_DATA', this.api)
@@ -117,11 +121,15 @@ export default {
           this.loader = false
           this.error = 'API Error'
         }
-      } else if (this.json) {
-        this.$Tables[this.id] = {
-          data: JSON.parse(this.json),
-          meta: this.meta.split(','),
-          id: this.id
+      } else if (this.input === 'json') {
+        if (this.json) {
+          this.$Tables[this.id] = {
+            data: JSON.parse(this.json),
+            meta: this.meta.split(','),
+            id: this.id
+          }
+        } else {
+          this.error = 'JSON Error'
         }
       } else {
         let data = []
