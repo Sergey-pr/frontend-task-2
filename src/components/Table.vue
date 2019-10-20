@@ -53,7 +53,7 @@
                 v-if="typeof value !== 'object'"
                 :key="key+index"
                 @dblclick="editCell(i, key)"
-                @keyup.enter="saveCell(i, key)"
+                @keydown.enter="saveCell(i, key)"
                 @keyup.esc="cancelCell(i, key)"
               >
                 <span>{{ value }}</span>
@@ -70,7 +70,7 @@
                 v-for="(value1, key1) in value"
                 :key="key1+index"
                 @dblclick="editCell(i, key1, key)"
-                @keyup.enter="saveCell(i, key1, key)"
+                @keydown.enter="saveCell(i, key1, key)"
                 @keyup.esc="cancelCell(i, key1, key)"
               >
                 <span>{{ value1 }}</span>
@@ -240,7 +240,9 @@ export default {
       let inputBox = this.$refs['input' + i + key][0]
       if (this.escPressed === false) {
         if (upperKey) {
-          this.paginatedData[i][upperKey][key] = inputBox.value
+          if (this.paginatedData[i][upperKey]) {
+            this.paginatedData[i][upperKey][key] = inputBox.value
+          }
         } else {
           this.paginatedData[i][key] = inputBox.value
         }
@@ -456,8 +458,5 @@ a:hover {
 .table-col-selected {
   max-width: 20px;
   min-width: 20px;
-}
-textarea {
-  height: auto;
 }
 </style>
