@@ -4,7 +4,14 @@
     <table>
       <thead>
         <tr>
-          <th class="table-col-selected"></th>
+          <th class="table-col-selected">
+            <input
+              type="checkbox"
+              @click="selectAll()"
+              :value="true"
+              v-model="selectAllVar"
+            >
+          </th>
           <template
              v-for="(value, key) in paginatedData[0]"
           >
@@ -191,7 +198,9 @@ export default {
       sortKey: null,
       searchField: null,
       filteredData: this.data,
-      selected: []
+      selected: [],
+      selectAllVar: false,
+      bufferHeaders: {}
     }
   },
   computed: {
@@ -253,13 +262,19 @@ export default {
     clean_table() {
       for (let i = 0; i < this.data.length; i++) {
         for (let j = 0; j < Object.keys(this.data[i]).length; j++) {
-          this.data[i][Object.keys(this.data[0])[j]] = ''
+          if (typeof this.data[i][Object.keys(this.data[0])[j]] !== 'object') {
+            this.data[i][Object.keys(this.data[0])[j]] = ''
+          } else {
+            for (let k = 0; k < Object.keys(this.data[0][Object.keys(this.data[0])[j]]).length; k++) {
+              this.data[i][Object.keys(this.data[0])[j]][Object.keys(this.data[i][Object.keys(this.data[0])[j]])[k]] = ''
+            }
+          }
         }
       }
     },
     add_row() {
       let dict = {}
-      for (let i = 0; i < Object.keys(this.data[i]).length; i++) {
+      for (let i = 0; i < Object.keys(this.data[0]).length; i++) {
         if (typeof this.data[0][Object.keys(this.data[0])[i]] === 'object') {
           dict[Object.keys(this.data[0])[i]] = {}
           for (let j = 0; j < Object.keys(this.data[0][Object.keys(this.data[0])[i]]).length; j++) {
@@ -273,7 +288,7 @@ export default {
     },
     insert_after_row(row_after_index) {
       let dict = {}
-      for (let i = 0; i < Object.keys(this.data[i]).length; i++) {
+      for (let i = 0; i < Object.keys(this.data[0]).length; i++) {
         if (typeof this.data[0][Object.keys(this.data[0])[i]] === 'object') {
           dict[Object.keys(this.data[0])[i]] = {}
           for (let j = 0; j < Object.keys(this.data[0][Object.keys(this.data[0])[i]]).length; j++) {
@@ -286,10 +301,15 @@ export default {
       this.data.splice(row_after_index, 0, dict)
     },
     removeRows() {
+      this.bufferHeaders = this.data[0]
       for (let i = 0; i < this.selected.length; i++) {
         this.data.splice(this.selected[i] - i, 1)
       }
       this.selected = []
+      if (this.data.length < 1) {
+        this.data.push(this.bufferHeaders)
+        this.clean_table()
+      }
     },
     removeTable() {
       delete this.$Tables[this.trueId]
@@ -366,6 +386,15 @@ export default {
         varData = this.data
       }
       this.filteredData = varData
+    },
+    selectAll() {
+      if (this.selectAllVar === false) {
+        for (let i = 0; i < this.data.length; i++) {
+          this.selected.push(i)
+        }
+      } else {
+        this.selected = []
+      }
     }
   }
 }
@@ -427,5 +456,8 @@ a:hover {
 .table-col-selected {
   max-width: 20px;
   min-width: 20px;
+}
+textarea {
+  height: auto;
 }
 </style>

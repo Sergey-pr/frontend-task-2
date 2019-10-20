@@ -122,13 +122,13 @@ export default {
           this.error = 'API Error'
         }
       } else if (this.input === 'json') {
-        if (this.json) {
+        try {
           this.$Tables[this.id] = {
             data: JSON.parse(this.json),
             meta: this.meta.split(','),
             id: this.id
           }
-        } else {
+        } catch (e) {
           this.error = 'JSON Error'
         }
       } else {
